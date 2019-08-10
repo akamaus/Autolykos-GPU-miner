@@ -5,7 +5,7 @@
 include Makefile.in
 
 # set shell
-SHELL := /bin/bash
+SHELL := bash
 
 # compiler standard
 STD = --std=c++11
