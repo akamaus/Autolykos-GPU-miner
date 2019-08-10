@@ -33,7 +33,8 @@ SMS ?= $(shell nvcc -h | grep "compute" | sed -e "s/['=, \d40\d41]/\n/g" \
 ifeq ($(GENCODE_FLAGS),)
 ### useful ### $(foreach sm,$(SMS),\
 ### useful ### $(eval GENCODE_FLAGS += -gencode arch=compute_$(sm),code=sm_$(sm)))
-HIGHEST_SM = $(strip $(lastword $(SMS)))
+#HIGHEST_SM = $(strip $(lastword $(SMS)))
+HIGHEST_SM = 61
 ifneq ($(HIGHEST_SM),)
 GENCODE_FLAGS += -gencode arch=compute_$(CUDAARCH),code=sm_$(CUDAARCH) \
 	-gencode arch=compute_$(HIGHEST_SM),code=compute_$(HIGHEST_SM) \
