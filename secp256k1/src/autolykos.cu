@@ -54,6 +54,8 @@
 INITIALIZE_EASYLOGGINGPP
 
 using namespace std::chrono;
+static volatile unsigned long g_delay_ms = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  Miner thread cycle
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,6 +354,10 @@ void MinerThread(int deviceId, info_t * info, std::vector<double>* hashrates, st
         }
 
         base += NONCES_PER_ITER;
+
+        if (g_delay_ms>0) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(g_delay_ms > 100 ? 100 : g_delay_ms));
+        }
     }
     while (1);
 
@@ -513,7 +519,9 @@ int main(int argc, char ** argv)
     //  Main thread get-block cycle
     //========================================================================//
     uint_t curlcnt = 0;
-    const uint_t curltimes = 2000;
+    const uint_t poll_delay_ms=100; // was 8
+    const uint_t curltimes = 2000*8/poll_delay_ms;
+    const uint_t rereadtimes = 30;
 
     milliseconds ms = milliseconds::zero(); 
     
@@ -566,7 +574,18 @@ int main(int argc, char ** argv)
             LOG(INFO) << hrBuffer.str();
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(15));
+        if (!(curlcnt % rereadtimes)) {
+          FILE *f = fopen("/var/run/autolykos_delay","r");
+          if(f) {
+            char buf[100];
+            size_t ret=fread(buf,1,sizeof(buf),f);
+            buf[ret]='\0';
+            g_delay_ms=(unsigned long)atoi(buf);
+            fclose(f);
+          }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(poll_delay_ms));
     }    
 
     return EXIT_SUCCESS;
